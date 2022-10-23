@@ -15,7 +15,7 @@ typedef struct _ponto{
 
 PONTO pontosArray[N];     // array de pontos
 PONTO clustersArray[K];   // array de centroides: contém as localizações dos centróides tendo o nº do cluster correspondente como indice no array
-int old[N];
+// int old[N];
 
 // Distância euclidiana
 float euclidiana(PONTO a, PONTO b){
@@ -68,6 +68,7 @@ void inicializa() {
         }
 
         // c. Atribuir cada amostra ao cluster mais próximo usando a distância euclidiana
+        
         float distancias[K]; // array para guardar distancias de um ponto aos diferentes centroides, para sacar o minimo deles
         for(int i=0; i<N; i++){
                 for(int c=0; c < K; c++){
@@ -123,33 +124,38 @@ void calcula_centroides(){
 int main() {
         inicializa();
         
-        int iterations = 0;
+        int iterations = 1;
         int count = 0;
         
-        while(count != N){
-                calcula_centroides();
+        do {
 
-                //int old[N]; // guardar valores antigo para checkar convergencia
-                
-                for(int i=0; i<N; i++){
-                        old[i] = pontosArray[i]->k;
+                PONTO old[K]; // guardar valores antigos dos centroides para checkar convergencia
+                for(int i=0; i < K; i++){
+                        old[i] = malloc(sizeof(struct _ponto));
                 }
+                
+                for(int i=0; i<K; i++){
+                        old[i]->x = clustersArray[i]->x;
+                        old[i]->y = clustersArray[i]->y;
+                        old[i]->k = clustersArray[i]->k;
+                }
+                calcula_centroides();
                 
                 atribui_cluster();
                 iterations++;
                 count = 0;
 
-                // Verificar se os pontos estão a convergir
-                for(int i=0; i<N; i++){
-                        if(old[i] == pontosArray[i]->k){
+                // Verificar se os centroides convergiram (nao mudaram)
+                for(int i=0; i<K; i++){
+                        if(old[i]->x == clustersArray[i]->x && old[i]->y == clustersArray[i]->y && old[i]->k == clustersArray[i]->k){
                                 count++;
                         }
                 }
                 printf("IT: [%d]", iterations);
-        }
+        } while(count != K);
 
 
-        printf("N = %d, K = %d\n", N, K);
+        printf("\nN = %d, K = %d\n", N, K);
         for(int i=0; i < K; i++){
                 printf("Center: (%f, %f) : Size: %d\n",clustersArray[i]->x,clustersArray[i]->y, clustersArray[i]->k);
         }
