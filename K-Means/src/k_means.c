@@ -15,7 +15,7 @@ typedef struct _ponto{
 
 PONTO pontosArray[N];     // array de pontos
 PONTO clustersArray[K];   // array de centroides: contém as localizações dos centróides tendo o nº do cluster correspondente como indice no array
-// int old[N];
+
 
 // Distância euclidiana
 float euclidiana(PONTO a, PONTO b){
@@ -130,7 +130,7 @@ int main() {
         do {
 
                 PONTO old[K]; // guardar valores antigos dos centroides para checkar convergencia
-                for(int i=0; i < K; i++){
+                for(int i=0; i<K; i++){
                         old[i] = malloc(sizeof(struct _ponto));
                 }
                 
@@ -157,7 +157,7 @@ int main() {
 
         printf("\nN = %d, K = %d\n", N, K);
         for(int i=0; i < K; i++){
-                printf("Center: (%f, %f) : Size: %d\n",clustersArray[i]->x,clustersArray[i]->y, clustersArray[i]->k);
+                printf("Center: (%.3f, %.3f) : Size: %d\n",clustersArray[i]->x,clustersArray[i]->y, clustersArray[i]->k);
         }
         printf("Iterations: %d\n", iterations);
         
