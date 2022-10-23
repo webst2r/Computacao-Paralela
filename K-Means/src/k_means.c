@@ -26,26 +26,19 @@ float euclidiana(PONTO a, PONTO b){
 }
 
 void atribui_cluster(){
-        float distancias[K];
-        int numOfChanges = 0;
-
-        // c. Atribuir cada amostra ao cluster mais próximo usando a distância euclidiana
-        for(int i = 0; i < N; i++){
-                for(int c = 0; c < K; c++){
-                        distancias[c] = euclidiana(pontosArray[i], clustersArray[c]);
-                }
-
-                int indice = 0;
-                for(int i=1; i < K; i++){
-                        if(distancias[i] < distancias[indice]){
-                                indice = i;
-                                numOfChanges++;
-                        }
-                }
-                pontosArray[i]->k = indice;
-        }
-
-        printf("\n changes: %d\n", numOfChanges);
+        float dist;
+        for(int i=0;i<N;i++) {
+        	float min_dist=1000000.0;
+        	int min_indice=-1;
+        	for(int j=0;j<K;j++) {
+        		dist = euclidiana(pontosArray[i], clustersArray[j]);
+        		if(dist<min_dist) {
+        			min_dist=dist;
+        			min_indice=j;
+        			}
+        		}
+        	pontosArray[i]->k = min_indice;
+        	}
 }
 
 void inicializa() {
@@ -53,35 +46,33 @@ void inicializa() {
         
         // a. Iniciar um vetor com valores aleatórios (N amostras no espaço (x,y) )
         for(int i = 0; i < N; i++) {
-                PONTO ponto = (PONTO) malloc(sizeof(struct _ponto));
-                ponto->x = (float) rand() / RAND_MAX;
-                ponto->y = (float) rand() / RAND_MAX;
-                pontosArray[i] = ponto;
+                pontosArray[i] = (PONTO) malloc(sizeof(struct _ponto));
+                pontosArray[i]->x = (float) rand() / RAND_MAX;
+                pontosArray[i]->y = (float) rand() / RAND_MAX; 
         }
 
         // b. Iniciar os K clusters com as coordenadas das primeiras K amostras
         for(int i = 0; i < K; i++) {
-                PONTO cluster = (PONTO) malloc(sizeof(struct _ponto));
-                cluster->x = pontosArray[i]->x;
-                cluster->y = pontosArray[i]->y;
-                clustersArray[i] = cluster;
+                clustersArray[i] =  (PONTO) malloc(sizeof(struct _ponto));
+                clustersArray[i]->x = pontosArray[i]->x;
+                clustersArray[i]->y = pontosArray[i]->y;
+                
         }
 
-        // c. Atribuir cada amostra ao cluster mais próximo usando a distância euclidiana
-        
-        float distancias[K]; // array para guardar distancias de um ponto aos diferentes centroides, para sacar o minimo deles
-        for(int i=0; i<N; i++){
-                for(int c=0; c < K; c++){
-                        distancias[c] = euclidiana(pontosArray[i], clustersArray[c]);
-                }
-                int indice = 0;
-                for(int i=1; i < K; i++){
-                        if(distancias[i] < distancias[indice]){
-                                indice = i;
-                        }
-                }
-                pontosArray[i]->k = indice;
-        }
+        // c. Atribuir cada amostra ao cluster mais próximo usando a distância euclidiana       
+        float dist;
+        for(int i=0;i<N;i++) {
+        	float min_dist=euclidiana(pontosArray[i], clustersArray[0]);
+        	int min_indice=0;
+        	for(int j=1;j<K;j++) {
+        		dist = euclidiana(pontosArray[i], clustersArray[j]);
+        		if(dist<min_dist) {
+        			min_dist=dist;
+        			min_indice=j;
+        			}
+        		}
+        	pontosArray[i]->k = min_indice;
+        	}
 }
 
 
@@ -105,6 +96,7 @@ void calcula_centroides(){
 
     for(int i=0; i < K; i++){
         sum[i] = malloc(sizeof(struct _ponto));
+        count[i] = 0;
     }
 
     for(int i=0; i< N ; i++){
@@ -124,15 +116,15 @@ void calcula_centroides(){
 int main() {
         inicializa();
         
-        int iterations = 1;
+        int iterations = 0;
         int count = 0;
-        
-        do {
 
-                PONTO old[K]; // guardar valores antigos dos centroides para checkar convergencia
-                for(int i=0; i<K; i++){
-                        old[i] = malloc(sizeof(struct _ponto));
-                }
+        PONTO old[K]; // guardar valores antigos dos centroides para checkar convergencia
+        for(int i=0; i<K; i++){
+                old[i] = malloc(sizeof(struct _ponto));
+        }
+        
+        while(count != K) {
                 
                 for(int i=0; i<K; i++){
                         old[i]->x = clustersArray[i]->x;
@@ -151,9 +143,8 @@ int main() {
                                 count++;
                         }
                 }
-                printf("IT: [%d]", iterations);
-        } while(count != K);
-
+        } 
+        iterations--;
 
         printf("\nN = %d, K = %d\n", N, K);
         for(int i=0; i < K; i++){
