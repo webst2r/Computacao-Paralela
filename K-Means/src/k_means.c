@@ -68,7 +68,7 @@ void inicializa() {
         }
 
         // c. Atribuir cada amostra ao cluster mais próximo usando a distância euclidiana
-        float distancias[K];
+        float distancias[K]; // array para guardar distancias de um ponto aos diferentes centroides, para sacar o minimo deles
         for(int i=0; i<N; i++){
                 for(int c=0; c < K; c++){
                         distancias[c] = euclidiana(pontosArray[i], clustersArray[c]);
