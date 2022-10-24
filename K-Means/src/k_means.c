@@ -21,24 +21,7 @@ PONTO clustersArray[K];   // array de centroides: contém as localizações dos 
 float euclidiana(PONTO a, PONTO b){
     float x = (a->x) - (b->x);
     float y = (a->y) - (b->y);
-    float dist = sqrt(pow(x, 2) + pow(y, 2)) * 1.0;
-    return dist;
-}
-
-void atribui_cluster(){
-        float dist;
-        for(int i=0;i<N;i++) {
-        	float min_dist=euclidiana(pontosArray[i], clustersArray[0]);
-        	int min_indice=0;
-        	for(int j=1;j<K;j++) {
-        		dist = euclidiana(pontosArray[i], clustersArray[j]);
-        		if(dist<min_dist) {
-        			min_dist=dist;
-        			min_indice=j;
-        			}
-        		}
-        	pontosArray[i]->k = min_indice;
-        	}
+    return x*x + y*y;
 }
 
 void inicializa() {
@@ -57,8 +40,21 @@ void inicializa() {
                 clustersArray[i]->x = pontosArray[i]->x;
                 clustersArray[i]->y = pontosArray[i]->y;
         }
+}
 
-        // c. Atribuir cada amostra ao cluster mais próximo usando a distância euclidiana       
+
+void atribui_cluster(){
+
+        int count[K]; // em cada indice encontra-se o COUNT de pontos pertencentes a esse cluster
+        float sum_x[K];
+        float sum_y[K];
+
+        for(int i=0; i < K; i++){
+                sum_x[i]=0;
+                sum_y[i]=0;
+                count[i]=0;
+        }
+
         float dist;
         for(int i=0;i<N;i++) {
         	float min_dist=euclidiana(pontosArray[i], clustersArray[0]);
@@ -70,36 +66,17 @@ void inicializa() {
         			min_indice=j;
         			}
         		}
-        	pontosArray[i]->k = min_indice;
+                count[min_indice]++;
+                sum_x[min_indice] += pontosArray[i]->x;
+                sum_y[min_indice] += pontosArray[i]->y;
         	}
-}
 
-
-// Funcao para recalcular os novos centroides para cada cluster
-// N é o numero total de data points e K é o numero total de clusters
-void calcula_centroides(){
-    int count[K]; // em cada indice encontra-se o COUNT de pontos pertencentes a esse cluster
-    PONTO sum[K]; 
-
-    for(int i=0; i < K; i++){
-        sum[i] = malloc(sizeof(struct _ponto));
-        count[i] = 0;
-    }
-
-    for(int i=0; i< N ; i++){ //soma pontos
-        count[pontosArray[i]->k]++;
-        sum[pontosArray[i]->k]->x += pontosArray[i]->x;
-        sum[pontosArray[i]->k]->y += pontosArray[i]->y;
-        sum[pontosArray[i]->k]->k = pontosArray[i]->k;
-    }
-    
-    // Atribuir a cada cluster as suas novas coordenadas e o seu novo size
-    for(int i=0; i< K ; i++){
-        clustersArray[i]->x = (sum[i]->x) / count[i];
-        clustersArray[i]->y = (sum[i]->y) / count[i];
-        clustersArray[i]->k = count[i];
-    }
-    
+        // Atribuir a cada cluster as suas novas coordenadas e o seu novo size
+        for(int i=0; i< K ; i++){
+                clustersArray[i]->x = sum_x[i] / count[i];
+                clustersArray[i]->y = sum_y[i] / count[i];
+                clustersArray[i]->k = count[i];
+        }
 }
 
 int main() {
@@ -107,20 +84,14 @@ int main() {
         
         int iterations = 0;
         int count = 0;
-
-        PONTO old[K]; // guardar valores antigos dos centroides para checkar convergencia
-        for(int i=0; i<K; i++){
-                old[i] = malloc(sizeof(struct _ponto));
-        }
-        
+        float x[K];
+        float y[K];
         while(count != K) {
                 
                 for(int i=0; i<K; i++){
-                        old[i]->x = clustersArray[i]->x;
-                        old[i]->y = clustersArray[i]->y;
-                        old[i]->k = clustersArray[i]->k;
+                        x[i] = clustersArray[i]->x;
+                        y[i] = clustersArray[i]->y;
                 }
-                calcula_centroides();
                 
                 atribui_cluster();
                 iterations++;
@@ -128,7 +99,7 @@ int main() {
 
                 // Verificar se os centroides convergiram (nao mudaram)
                 for(int i=0; i<K; i++){
-                        if(old[i]->x == clustersArray[i]->x && old[i]->y == clustersArray[i]->y && old[i]->k == clustersArray[i]->k){
+                        if(x[i] == clustersArray[i]->x && y[i] == clustersArray[i]->y){
                                 count++;
                         }
                 }
