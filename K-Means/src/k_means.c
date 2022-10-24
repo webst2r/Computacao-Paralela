@@ -28,9 +28,9 @@ float euclidiana(PONTO a, PONTO b){
 void atribui_cluster(){
         float dist;
         for(int i=0;i<N;i++) {
-        	float min_dist=1000000.0;
-        	int min_indice=-1;
-        	for(int j=0;j<K;j++) {
+        	float min_dist=euclidiana(pontosArray[i], clustersArray[0]);
+        	int min_indice=0;
+        	for(int j=1;j<K;j++) {
         		dist = euclidiana(pontosArray[i], clustersArray[j]);
         		if(dist<min_dist) {
         			min_dist=dist;
@@ -56,7 +56,6 @@ void inicializa() {
                 clustersArray[i] =  (PONTO) malloc(sizeof(struct _ponto));
                 clustersArray[i]->x = pontosArray[i]->x;
                 clustersArray[i]->y = pontosArray[i]->y;
-                
         }
 
         // c. Atribuir cada amostra ao cluster mais próximo usando a distância euclidiana       
@@ -76,18 +75,6 @@ void inicializa() {
 }
 
 
-
-
-// Assumindo que o cluster é o mesmo
-PONTO soma_pontos(PONTO a, PONTO b){
-    PONTO res = malloc(sizeof(struct _ponto));
-    res->x = (a->x) + (b->x);
-    res->y = (a->y) + (b->y);
-    res->k = a->k;
-    return res;
-}
-
-
 // Funcao para recalcular os novos centroides para cada cluster
 // N é o numero total de data points e K é o numero total de clusters
 void calcula_centroides(){
@@ -99,9 +86,11 @@ void calcula_centroides(){
         count[i] = 0;
     }
 
-    for(int i=0; i< N ; i++){
+    for(int i=0; i< N ; i++){ //soma pontos
         count[pontosArray[i]->k]++;
-        sum[pontosArray[i]->k] = soma_pontos(pontosArray[i],sum[pontosArray[i]->k] );
+        sum[pontosArray[i]->k]->x += pontosArray[i]->x;
+        sum[pontosArray[i]->k]->y += pontosArray[i]->y;
+        sum[pontosArray[i]->k]->k = pontosArray[i]->k;
     }
     
     // Atribuir a cada cluster as suas novas coordenadas e o seu novo size

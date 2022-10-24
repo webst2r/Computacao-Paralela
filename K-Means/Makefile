@@ -1,7 +1,7 @@
 CC = gcc
 BIN = bin/
 SRC = src/
-CFLAGS = -lm
+CFLAGS = -lm -O2
 INCLUDES = include/
 EXEC= k_means
 
