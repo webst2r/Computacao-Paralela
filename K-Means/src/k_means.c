@@ -12,15 +12,14 @@ typedef struct _ponto{
     int k;    // cluster a que o ponto pertence
 } *PONTO;
 
-
-PONTO pontosArray[N];     // array de pontos
 PONTO clustersArray[K];   // array de centroides: contém as localizações dos centróides tendo o nº do cluster correspondente como indice no array
+float ponto_x[N];
+float ponto_y[N];
 
 
-// Distância euclidiana
-float euclidiana(PONTO a, PONTO b){
-    float x = (a->x) - (b->x);
-    float y = (a->y) - (b->y);
+float euclidiana(float ponto_x,float ponto_y, PONTO b){
+    float x = ponto_x - (b->x);
+    float y = ponto_y - (b->y);
     return x*x + y*y;
 }
 
@@ -28,17 +27,17 @@ void inicializa() {
         srand(10);
         
         // a. Iniciar um vetor com valores aleatórios (N amostras no espaço (x,y) )
+        #pragma unroll(4)
         for(int i = 0; i < N; i++) {
-                pontosArray[i] = (PONTO) malloc(sizeof(struct _ponto));
-                pontosArray[i]->x = (float) rand() / RAND_MAX;
-                pontosArray[i]->y = (float) rand() / RAND_MAX; 
+                ponto_x[i] = (float) rand() / RAND_MAX;
+                ponto_y[i] = (float) rand() / RAND_MAX;
         }
 
         // b. Iniciar os K clusters com as coordenadas das primeiras K amostras
         for(int i = 0; i < K; i++) {
                 clustersArray[i] =  (PONTO) malloc(sizeof(struct _ponto));
-                clustersArray[i]->x = pontosArray[i]->x;
-                clustersArray[i]->y = pontosArray[i]->y;
+                clustersArray[i]->x = ponto_x[i];
+                clustersArray[i]->y = ponto_y[i];
         }
 }
 
@@ -56,19 +55,23 @@ void atribui_cluster(){
         }
 
         float dist;
+        PONTO p;
+        float min_dist;
+        int min_indice;
+
         for(int i=0;i<N;i++) {
-        	float min_dist=euclidiana(pontosArray[i], clustersArray[0]);
-        	int min_indice=0;
+        	min_dist=euclidiana(ponto_x[i],ponto_y[i], clustersArray[0]);
+        	min_indice=0;
         	for(int j=1;j<K;j++) {
-        		dist = euclidiana(pontosArray[i], clustersArray[j]);
+                        dist = euclidiana(ponto_x[i],ponto_y[i], clustersArray[j]);
         		if(dist<min_dist) {
         			min_dist=dist;
         			min_indice=j;
         			}
         		}
                 count[min_indice]++;
-                sum_x[min_indice] += pontosArray[i]->x;
-                sum_y[min_indice] += pontosArray[i]->y;
+                sum_x[min_indice] += ponto_x[i];
+                sum_y[min_indice] += ponto_y[i];
         	}
 
         // Atribuir a cada cluster as suas novas coordenadas e o seu novo size
