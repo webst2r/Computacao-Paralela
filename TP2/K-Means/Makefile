@@ -1,9 +1,10 @@
 CC = gcc
 BIN = bin/
 SRC = src/
-CFLAGS = -lm -O2
 INCLUDES = include/
 EXEC= k_means
+THREADS = 2
+CFLAGS = -lm -O2
 
 .DEFAULT_GOAL = k_means
 
@@ -16,5 +17,8 @@ $(BIN)utils.o: $(SRC)utils.c $(INCLUDES)utils.h
 clean:
 	rm -r bin/*
 
-run:
-	./$(BIN)$(EXEC)
+runseq:
+	./$(BIN)$(EXEC) 10000000 $(CP_CLUSTERS)
+
+runpar:
+	./$(BIN)$(EXEC) 10000000 $(CP_CLUSTERS) $THREADS
