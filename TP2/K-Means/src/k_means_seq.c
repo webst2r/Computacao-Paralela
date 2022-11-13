@@ -3,13 +3,18 @@
 #include <time.h>
 #include <math.h>
 
-int N, K, N_THREADS; // numero de pontos, clusters, fios de execução
+#define N 10000000      // numero de pontos 10000000
+#define K 4             // numero de clusters
 
 typedef struct _ponto{
     float x;
     float y;
     int k;    // cluster a que o ponto pertence
 } *PONTO;
+
+PONTO clustersArray[K];   // array de centroides: contém as localizações dos centróides tendo o nº do cluster correspondente como indice no array
+float ponto_x[N];
+float ponto_y[N];
 
 
 float euclidiana(float ponto_x,float ponto_y, PONTO b){
@@ -18,7 +23,7 @@ float euclidiana(float ponto_x,float ponto_y, PONTO b){
     return x*x + y*y;
 }
 
-void inicializa(float ponto_x[], float ponto_y[], PONTO clustersArray[]) {
+void inicializa() {
         srand(10);
         
         // a. Iniciar um vetor com valores aleatórios (N amostras no espaço (x,y) )
@@ -37,7 +42,7 @@ void inicializa(float ponto_x[], float ponto_y[], PONTO clustersArray[]) {
 }
 
 
-void atribui_cluster(float ponto_x[], float ponto_y[], PONTO clustersArray[]){
+void atribui_cluster(){
 
         int count[K]; // em cada indice encontra-se o COUNT de pontos pertencentes a esse cluster
         float sum_x[K];
@@ -53,9 +58,7 @@ void atribui_cluster(float ponto_x[], float ponto_y[], PONTO clustersArray[]){
         PONTO p;
         float min_dist;
         int min_indice;
-        
-        #pragma omp parallel N_THREADS
-        #pragma omp for
+
         for(int i=0;i<N;i++) {
         	min_dist=euclidiana(ponto_x[i],ponto_y[i], clustersArray[0]);
         	min_indice=0;
@@ -79,25 +82,8 @@ void atribui_cluster(float ponto_x[], float ponto_y[], PONTO clustersArray[]){
         }
 }
 
-
-
-int main(int argc, char *argv[]) {
-        // ./k_means 10000000 4 2
-
-        if(argc == 4){
-                N = atoi(argv[1]);
-                K = atoi(argv[2]);
-                N_THREADS = atoi(argv[3]);
-        } else {
-                printf("Erro: Argumentos inválidos.\n");
-                return 0;
-        }
-        printf("N: %d, K: %d, F: %d\n", N, K,N_THREADS);
-
-        PONTO clustersArray[K];   // array de centroides: contém as localizações dos centróides tendo o nº do cluster correspondente como indice no array
-        float *ponto_x = malloc(sizeof(float) * N);
-        float *ponto_y = malloc(sizeof(float) * N);
-        inicializa(ponto_x, ponto_y, clustersArray);
+int main() {
+        inicializa();
         
         int iterations = 0;
         int count = 0;
@@ -110,7 +96,7 @@ int main(int argc, char *argv[]) {
                         y[i] = clustersArray[i]->y;
                 }
                 
-                atribui_cluster(ponto_x, ponto_y, clustersArray);
+                atribui_cluster();
                 iterations++;
                 count = 0;
 
