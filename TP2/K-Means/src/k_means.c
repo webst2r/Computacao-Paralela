@@ -77,6 +77,10 @@ void atribui_cluster_seq(float ponto_x[], float ponto_y[], PONTO clustersArray[]
         }
 }
 
+
+
+
+
 void inicializa_par(float ponto_x[], float ponto_y[], PONTO clustersArray[]) {
         srand(10);
         
@@ -101,6 +105,7 @@ void atribui_cluster_par(float ponto_x[], float ponto_y[], PONTO clustersArray[]
         float sum_x[K];
         float sum_y[K];
 
+        #pragma omp parallel for num_threads(N_THREADS)
         for(int i=0; i < K; i++){
                 sum_x[i]=0;
                 sum_y[i]=0;
@@ -111,7 +116,7 @@ void atribui_cluster_par(float ponto_x[], float ponto_y[], PONTO clustersArray[]
         PONTO p;
         float min_dist;
         int min_indice;
-        
+        #pragma omp parallel for num_threads(N_THREADS) private(min_dist,min_indice,dist) reduction(+:sum_x,sum_y,count)
         for(int i=0;i<N;i++) {
         	min_dist=euclidiana(ponto_x[i],ponto_y[i], clustersArray[0]);
         	min_indice=0;
@@ -122,7 +127,7 @@ void atribui_cluster_par(float ponto_x[], float ponto_y[], PONTO clustersArray[]
         			min_indice=j;
         			}
         		}
-                count[min_indice]++;
+                count[min_indice]+= 1;
                 sum_x[min_indice] += ponto_x[i];
                 sum_y[min_indice] += ponto_y[i];
         }
@@ -138,7 +143,7 @@ void atribui_cluster_par(float ponto_x[], float ponto_y[], PONTO clustersArray[]
 
 
 int main(int argc, char *argv[]) {
-        if(argc == 4){ //paralela
+        if(argc == 4){ //codigo paralelo
                 N = atoi(argv[1]);
                 K = atoi(argv[2]);
                 N_THREADS = atoi(argv[3]);
@@ -153,8 +158,8 @@ int main(int argc, char *argv[]) {
                 float x[K];
                 float y[K];
                 
-                while(count != K) {
-                        
+                while(iterations<20) {
+                        #pragma omp parallel for num_threads(N_THREADS)
                         for(int i=0; i<K; i++){
                                 x[i] = clustersArray[i]->x;
                                 y[i] = clustersArray[i]->y;
@@ -171,7 +176,6 @@ int main(int argc, char *argv[]) {
                                 }
                         }
                 } 
-                iterations--;
 
                 printf("\nN = %d, K = %d\n", N, K);
                 for(int i=0; i < K; i++){
@@ -180,7 +184,7 @@ int main(int argc, char *argv[]) {
                 printf("Iterations: %d\n", iterations);
 
         } else {
-                if(argc=3) { //seq
+                if(argc=3) { //codigo sequencial
                         N = atoi(argv[1]);
                         K = atoi(argv[2]);
 

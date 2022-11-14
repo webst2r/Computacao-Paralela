@@ -3,8 +3,8 @@ BIN = bin/
 SRC = src/
 INCLUDES = include/
 EXEC= k_means
-THREADS = 2
-CFLAGS = -lm -O2
+THREADS = 16
+CFLAGS = -lm -O2 -fopenmp
 
 .DEFAULT_GOAL = k_means
 
