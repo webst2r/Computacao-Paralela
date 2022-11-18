@@ -83,8 +83,8 @@ void atribui_cluster_seq(float ponto_x[], float ponto_y[], PONTO clustersArray[]
 
 void inicializa_par(float ponto_x[], float ponto_y[], PONTO clustersArray[]) {
         srand(10);
-        
-        // a. Iniciar um vetor com valores aleatórios (N amostras no espaço (x,y) )
+       
+        // a. Iniciar um vetor com valores aleatórios (N amostras no espaço (x,y) ) 
         for(int i = 0; i < N; i++) {
                 ponto_x[i] = (float) rand() / RAND_MAX;
                 ponto_y[i] = (float) rand() / RAND_MAX;
