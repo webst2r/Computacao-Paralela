@@ -3,9 +3,8 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-#include <omp.h>
 
-int N, K, N_PROCESSES; // numero de pontos, clusters, fios de execução
+int N, K, N_PROCESSES; // numero de pontos, clusters, numero de processos
 #define MAX 20
 
 float euclidiana(float ponto1_x,float ponto1_y, float ponto2_x,float ponto2_y){
@@ -76,7 +75,7 @@ int main(int argc, char *argv[]) {
                 int point_process= N/N_PROCESSES;
                 
                 while(iterations<MAX && changed == 0) {
-                        
+                        //envio dos pontos dos clusters 
                         MPI_Bcast(clusters_x, K, MPI_FLOAT, 0, MPI_COMM_WORLD);
 		        MPI_Bcast(clusters_y, K, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
