@@ -137,6 +137,20 @@ int main(int argc, char *argv[]) {
                         }
                         printf("Iterations: %d\n", iterations);
                 }
+
+                free(clusters_x);
+                free(clusters_y);
+                free(ponto_x);
+                free(ponto_y);
+                free(recv_x);
+                free(recv_y);
+                free(sum_x);
+                free(sum_y);
+                free(total_sum_x);
+                free(total_sum_y);
+                free(clusters_size);
+                free(count);
+                free(total_count);
                 MPI_Finalize();
                 return 0;
         }
