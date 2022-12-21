@@ -6,21 +6,15 @@
 #include <omp.h>
 
 int N, K, N_PROCESSES; // numero de pontos, clusters, fios de execução
+#define MAX 20
 
-typedef struct _ponto{
-    float x;
-    float y;
-    int k;    // cluster a que o ponto pertence
-} *PONTO;
-
-
-float euclidiana(float ponto_x,float ponto_y, PONTO b){
-    float x = ponto_x - (b->x);
-    float y = ponto_y - (b->y);
+float euclidiana(float ponto1_x,float ponto1_y, float ponto2_x,float ponto2_y){
+    float x = ponto1_x - ponto2_x;
+    float y = ponto1_y - ponto2_y;
     return x*x + y*y;
 }
 
-void inicializa(float ponto_x[], float ponto_y[], PONTO clustersArray[]) {
+void inicializa(float ponto_x[], float ponto_y[], float clusters_x[], float clusters_y[]) {
         srand(10);
         
         // a. Iniciar um vetor com valores aleatórios (N amostras no espaço (x,y) )
@@ -31,9 +25,8 @@ void inicializa(float ponto_x[], float ponto_y[], PONTO clustersArray[]) {
 
         // b. Iniciar os K clusters com as coordenadas das primeiras K amostras
         for(int i = 0; i < K; i++) {
-                clustersArray[i] =  (PONTO) malloc(sizeof(struct _ponto));
-                clustersArray[i]->x = ponto_x[i];
-                clustersArray[i]->y = ponto_y[i];
+                clusters_x[i] = ponto_x[i];
+                clusters_y[i] = ponto_y[i];
         }
 }
 
@@ -42,27 +35,33 @@ int main(int argc, char *argv[]) {
         if(argc==4) {
                 N = atoi(argv[1]);
                 K = atoi(argv[2]);
-                //N_PROCESSES = atoi(argv[3]);
+                N_PROCESSES = atoi(argv[3]);
                 int rank,size;
                 MPI_Init(NULL, NULL);
-                MPI_Comm_rank(MPI_COMM_WORLD, &rank );
+                MPI_Comm_rank(MPI_COMM_WORLD, &rank);
                 MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-                PONTO clustersArray[K];   // array de centroides: contém as localizações dos centróides tendo o nº do cluster correspondente como indice no array
-                float *ponto_x, *ponto_y, *recv_x, *recv_y;
-                int i =10;
+                float *clusters_x,*clusters_y,*ponto_x, *ponto_y, *recv_x, *recv_y,*sum_x,*sum_y,*total_sum_x,*total_sum_y;
+                clusters_x = malloc(sizeof(float)*K);
+                clusters_y = malloc(sizeof(float)*K);
+                ponto_x = malloc(sizeof(float) * N);
+                ponto_y = malloc(sizeof(float) * N);
+                recv_x = malloc(sizeof(float) * ((N/N_PROCESSES) + 1));
+                recv_y = malloc(sizeof(float) * ((N/N_PROCESSES) + 1));
+                sum_x = malloc(sizeof(float)*K);
+                sum_y = malloc(sizeof(float)*K);
+                total_sum_x = malloc(sizeof(float)*K);
+                total_sum_y = malloc(sizeof(float)*K);
+                int *clusters_size,*count,*total_count;
+                clusters_size = malloc(sizeof(int)*K);
+                count = malloc(sizeof(int)*K);
+                total_count = malloc(sizeof(int)*K);
+
                 if(rank==0) {//Master
-                        ponto_x = malloc(sizeof(float) * N);
-                        ponto_y = malloc(sizeof(float) * N);
-                        inicializa(ponto_x, ponto_y, clustersArray);
-                        recv_x = (float *)malloc(sizeof(float) * ((N/N_PROCESSES) + 1));
-                        recv_y = (float *)malloc(sizeof(float) * ((N/N_PROCESSES) + 1));
-                }//workes
-                else {
-                        recv_x = (double *)malloc(sizeof(double) * ((N/N_PROCESSES) + 1));
-		        recv_y = (double *)malloc(sizeof(double) * ((N/N_PROCESSES) + 1));
+                        inicializa(ponto_x, ponto_y, clusters_x,clusters_y);
                 }
 
+                //particionamento dos pontos
                 MPI_Scatter(ponto_x, (N/N_PROCESSES) + 1, MPI_FLOAT,
 		recv_x, (N/N_PROCESSES) + 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
@@ -70,40 +69,78 @@ int main(int argc, char *argv[]) {
 		recv_y, (N/N_PROCESSES) + 1, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
                 int iterations = 0;
-                int count = 0;
-                float x[K];
-                float y[K];
+                int changed = 0;
+                float dist;
+                float min_dist;
+                int min_indice;
+                int point_process= N/N_PROCESSES;
                 
-                while(iterations<20) {
-                        for(int i=0; i<K; i++){
-                                x[i] = clustersArray[i]->x;
-                                y[i] = clustersArray[i]->y;
-                        }
+                while(iterations<MAX && changed == 0) {
                         
-                        atribui_cluster(ponto_x, ponto_y, clustersArray);
-                        iterations++;
-                        count = 0;
+                        MPI_Bcast(clusters_x, K, MPI_FLOAT, 0, MPI_COMM_WORLD);
+		        MPI_Bcast(clusters_y, K, MPI_FLOAT, 0, MPI_COMM_WORLD);
+
+
+                        for(int i=0; i < K; i++){
+                                sum_x[i]=0;
+                                sum_y[i]=0;
+                                count[i]=0;
+                        }
+
+                        for(int i=0;i<point_process;i++) {
+                                min_dist=euclidiana(recv_x[i],recv_y[i], clusters_x[0],clusters_y[0]);
+                                min_indice=0;
+                                for(int j=1;j<K;j++) {
+                                        dist = euclidiana(recv_x[i],recv_y[i], clusters_x[j],clusters_y[j]);
+                                        if(dist<min_dist) {
+                                                min_dist=dist;
+                                                min_indice=j;
+                                                }
+                                        }
+                                count[min_indice]++;
+                                sum_x[min_indice] += recv_x[i];
+                                sum_y[min_indice] += recv_y[i];
+                        }
+
+                        MPI_Reduce(sum_x, total_sum_x, K, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+                        MPI_Reduce(sum_y, total_sum_y, K, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+                        MPI_Reduce(count, total_count, K, MPI_INT, MPI_SUM, 0, MPI_COMM_WORLD);
+
+                        
                         if (rank==0) {
-                        // Verificar se os centroides convergiram (nao mudaram)
+                                iterations++;
+                                int number_clusters_change = 0;
+                                // Verificar se os centroides convergiram (nao mudaram)
                                 for(int i=0; i<K; i++){
-                                        if(x[i] == clustersArray[i]->x && y[i] == clustersArray[i]->y){
-                                                count++;
+                                        if(clusters_x[i] ==total_sum_x[i]/total_count[i]  && clusters_x[i] == total_sum_y[i]/total_count[i]){
+                                                number_clusters_change++;
                                         }
                                 }
+                                if(number_clusters_change==K) {
+                                        changed=1;
+                                }                                 
+                                for (int i=0; i<K; i++) {
+                                        clusters_x[i] = total_sum_x[i]/total_count[i];
+                                        clusters_y[i] = total_sum_y[i]/total_count[i];
+                                        clusters_size[i] = total_count[i];
+                                }
                         }
-                } //https://github.com/dzdao/k-means-clustering-mpi/blob/master/k-means.c
+                        MPI_Bcast(&changed, 1, MPI_INT, 0, MPI_COMM_WORLD);
+                        MPI_Bcast(&iterations, 1, MPI_INT, 0, MPI_COMM_WORLD);
+                }
 
-                if(world_rank == 0) {
+
+                if(rank == 0) {
                         printf("\nN = %d, K = %d\n", N, K);
                         for(int i=0; i < K; i++){
-                                printf("Center: (%.3f, %.3f) : Size: %d\n",clustersArray[i]->x,clustersArray[i]->y, clustersArray[i]->k);
+                                printf("Center: (%.3f, %.3f) : Size: %d\n",clusters_x[i],clusters_y[i], clusters_size[i]);
                         }
                         printf("Iterations: %d\n", iterations);
                 }
                 MPI_Finalize();
+                return 0;
         }
         else {
                 printf("Erro: Argumentos inválidos.\n");
         }
-        return 0;
 }

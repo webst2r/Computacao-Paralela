@@ -1,24 +1,17 @@
-CC = gcc
+MPICC = mpicc
 BIN = bin/
 SRC = src/
+CFLAGS = -lm -O2
 INCLUDES = include/
 EXEC= k_means
-THREADS = 16
-CFLAGS = -lm -O2 -fopenmp
 
 .DEFAULT_GOAL = k_means
 
-k_means: $(SRC)k_means.c $(BIN)utils.o
-	$(CC) $(SRC)k_means.c $(BIN)utils.o -o $(BIN)$(EXEC) $(CFLAGS)
-
-$(BIN)utils.o: $(SRC)utils.c $(INCLUDES)utils.h
-	$(CC) -c $(SRC)utils.c -o $(BIN)utils.o $(CFLAGS)
+k_means: $(SRC)k_means.c
+	$(MPICC) $(SRC)k_means.c -o $(BIN)$(EXEC) $(CFLAGS)
 
 clean:
 	rm -r bin/*
 
-runseq:
-	./$(BIN)$(EXEC) 10000000 $(CP_CLUSTERS)
-
-runpar:
-	./$(BIN)$(EXEC) 10000000 $(CP_CLUSTERS) $(THREADS)
+run:
+	mpirun -np 3 $(BIN)$(EXEC) 10000000 4 3

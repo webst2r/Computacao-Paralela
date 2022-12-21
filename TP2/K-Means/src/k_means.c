@@ -175,6 +175,9 @@ int main(int argc, char *argv[]) {
                                         count++;
                                 }
                         }
+                        if(count == K) {
+                                break;
+                        }
                 } 
 
                 printf("\nN = %d, K = %d\n", N, K);
