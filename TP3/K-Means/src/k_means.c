@@ -32,11 +32,13 @@ void inicializa(float ponto_x[], float ponto_y[], float clusters_x[], float clus
 
 int main(int argc, char *argv[]) {
         if(argc==4) {
+                double start, end;
                 N = atoi(argv[1]);
                 K = atoi(argv[2]);
                 N_PROCESSES = atoi(argv[3]);
                 int rank,size;
                 MPI_Init(NULL, NULL);
+                start = MPI_Wtime();
                 MPI_Comm_rank(MPI_COMM_WORLD, &rank);
                 MPI_Comm_size(MPI_COMM_WORLD, &size);
 
@@ -128,13 +130,14 @@ int main(int argc, char *argv[]) {
                         MPI_Bcast(&iterations, 1, MPI_INT, 0, MPI_COMM_WORLD);
                 }
 
-
+                end = MPI_Wtime();
                 if(rank == 0) {
                         printf("\nN = %d, K = %d\n", N, K);
                         for(int i=0; i < K; i++){
                                 printf("Center: (%.3f, %.3f) : Size: %d\n",clusters_x[i],clusters_y[i], clusters_size[i]);
                         }
                         printf("Iterations: %d\n", iterations);
+                        printf("Runtime = %f\n", end-start);
                 }
 
                 free(clusters_x);
