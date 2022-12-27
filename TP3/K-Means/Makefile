@@ -14,4 +14,4 @@ clean:
 	rm -r bin/*
 
 run:
-	mpirun -np 3 $(BIN)$(EXEC) 10000000 4 3
+	mpirun -np 8 $(BIN)$(EXEC) 10000000 4 8
