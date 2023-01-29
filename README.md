@@ -4,7 +4,7 @@
 developed with the aid of parallel computing optimization techniques aiming to minime the total execution time.
 
 ## :pushpin: K-Means algorithm (parallel)
-***About*** :  Implementation and analysis of an optimized parallel version of the K-Means algorithm.
+***About*** :  Implementation and analysis of an optimized parallel version of the K-Means algorithm using OpenMP & MPI (Message Passing Programming).
 
 
 
